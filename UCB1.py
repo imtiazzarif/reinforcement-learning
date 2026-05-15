@@ -1,0 +1,38 @@
+import numpy as np
+import matplotlib.pyplot as plt
+n_trial=10000
+epsilon=0.1
+B_probability=[.2,.5,.75]
+class Bandit:
+    def __init__(self,p):
+        self.p=p
+        self.p_estimate=0
+        self.N=0
+    def pull(self):
+        return np.random.random()<self.p
+    def update(self,x):
+        self.N+=1
+        self.p_estimate=((self.N-1)*self.p_estimate+x)/self.N
+def ucb(mn,n,nj):
+        return mn + np.sqrt(2*np.log(n)/nj)
+def run_experiment():
+    bandits=[Bandit(p) for p in B_probability]
+    rewards=np.zeros(n_trial)
+    total_plays=0
+    for j in range(len(bandits)):
+        x=bandits[j].pull()
+        total_plays+=1
+        bandits[j].update(x)
+    for i in range(n_trial):
+        j=np.argmax([ucb(b.p_estimate,total_plays,b.N) for b in bandits])
+        x=bandits[j].pull()
+        total_plays+=1
+        bandits[j].update(x)
+        rewards[i]=x
+    cumulative_average=np.cumsum(rewards)/(np.arange(n_trial)+1)
+    plt.plot(cumulative_average)
+    plt.plot(np.ones(n_trial)*np.max(B_probability))
+    plt.xscale('log')
+    plt.show()
+run_experiment()
+
